@@ -1,0 +1,168 @@
+package Module::UseFrom;
+
+use strict;
+use warnings;
+
+use Carp;
+use Module::CoreList;
+use ExtUtils::Installed;
+use version 0.77;
+
+use Devel::Declare ();
+
+my $inst = ExtUtils::Installed->new();
+my $verbose = 0;
+my $check_installed = 0;
+
+sub import {
+  my $class = shift;
+  my $opts = shift;
+
+  $verbose = $opts->{verbose} || 0;
+  $check_installed = $opts->{check_installed} || 0;
+
+  my $caller = caller;
+
+  Devel::Declare->setup_for(
+      $caller,
+      { 'use_from' => { const => \&rewrite_use_from } }
+  );
+  no strict 'refs';
+  *{$caller.'::use_from'} = sub {};
+
+}
+
+sub rewrite_use_from {
+  my $linestr = Devel::Declare::get_linestr;
+
+  if ($verbose) {
+    my $string = "Got: $linestr";
+    if (ref $verbose) {
+      $$verbose .= $string;
+    } else {
+      warn $string;
+    }
+  }
+
+  my $caller = Devel::Declare::get_curstash_name;
+
+  $linestr =~ s/use_from\s+([\$\@\%]{1})(\w+)/
+    my $sigil = $1;
+    my $var = $2;
+    gen_replacement($caller, $sigil, $var);
+  /e;
+  
+  if ($verbose) {
+    my $string = "Rewritten: $linestr";
+    if (ref $verbose) {
+      $$verbose .= $string;
+    } else {
+      warn $string;
+    }
+  }
+
+  Devel::Declare::set_linestr($linestr);
+}
+
+sub gen_replacement {
+  my ($caller, $sigil, $var) = @_;
+
+  my $varname = $caller . '::' . $var;
+
+  my $new_statement = 'use_from; ';
+
+  no strict 'refs';
+  if ($sigil eq '$') {
+    my $module = 
+      (defined ${$varname}) 
+      ? ${$varname}
+      : croak "Cannot access variable \$$varname";
+    $new_statement .= gen_use_statement($module);
+  } elsif ($sigil eq '@') {
+    my @modules = 
+      (scalar @{$varname}) 
+      ? @{$varname}
+      : croak "Cannot access variable \@$varname";
+  
+    my @statements = map { gen_use_statement($_) || () } @modules;
+
+    $new_statement .= join('; ', @statements);
+  } elsif ($sigil eq '%') {
+    my %modules = 
+      (scalar keys %{$varname}) 
+      ? %{$varname}
+      : croak "Cannot access variable \%$varname";
+
+    my @statements;
+
+    foreach my $module (keys %modules) {
+      my $reftype = ref $modules{$module};
+
+      my $statement;
+      if ($reftype eq 'HASH') {
+        $statement = gen_use_statement($module, $modules{$module});
+      } elsif ($reftype eq 'ARRAY') {
+        $statement = gen_use_statement(
+          $module,
+          { 'import' => $modules{$module} }
+        );
+      } else {
+        $statement = gen_use_statement(
+          $module,
+          { 'version' => $modules{$module} }
+        );
+      }
+
+      push @statements, $statement if $statement;
+    }
+
+    $new_statement .= join('; ', @statements);
+  }
+
+  return $new_statement;
+}
+
+sub gen_use_statement {
+  my ($module, $opts) = @_;
+
+  $opts ||= {};
+
+  my $check = $check_installed || $opts->{check_installed};
+  my $req_version = $opts->{version} || 0;
+
+  my $return;
+  if ($check) {
+    my $found_version = 
+      eval { $inst->version($module) } ||
+      exists $Module::CoreList::version{$]}{$module} 
+        ? ( $Module::CoreList::version{$]}{$module} || 'no version') 
+        : undef;
+
+    return '' unless $found_version;
+
+    if ($req_version) {
+      my $rv = version->parse($req_version);
+      my $fv = version->parse($found_version);
+
+      return '' unless ($fv >= $rv);
+    }
+    
+    $return = "use $module";
+
+  } else {
+    $return = "use $module";
+  }
+
+  if ($req_version) {
+    $return .= " $req_version";
+  }
+
+  if (ref $opts->{'import'} and @{ $opts->{'import'} }) {
+    $return .= q/ ('/ . join( q/', '/, @{ $opts->{'import'} } ) . q/')/;
+  }
+
+  return $return;
+}
+
+1;
+
