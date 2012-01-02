@@ -154,7 +154,7 @@ sub gen_use_statement {
     $return .= q/ ('/ . join( q/', '/, @{ $opts->{'import'} } ) . q/')/;
   }
 
-  if (wantarray and $found_version) {
+  if (wantarray and defined $found_version) {
     return ($return, $found_version);
   } else { 
     return $return;
@@ -275,7 +275,7 @@ Finally, if a C<version> and C<check_installed> are both specified and the modul
 
 =head1 OPTIONS
 
-C<Module::UseFrom> has a few options, controlled by package variables.
+C<Module::UseFrom> has a few options, controlled by package variables. These also must be inside a C<BEGIN> block, so that they are set in time to be useful.
 
 =head2 C<$Module::UseFrom::verbose>
 
