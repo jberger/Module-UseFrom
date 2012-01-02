@@ -248,15 +248,15 @@ When called with a hash, the interface suddenly becomes a little more flexible. 
 
 =head3 SIMPLE SCALAR
 
-If the value is a simple scalar, which are interpreted as version directives. Use C<0> to allow any version (and in fact not even write the version to the C<use> directive).
+If the value is a simple scalar it is interpreted as a version directive. Use C<0> to allow any version (and in fact not even write the version to the C<use> directive).
 
 =head3 ARRAY REFERENCE
 
-If the value is an array reference, which is interpreted as import directives. These must (for now) be simple strings, not object/references etc. These are written out as a single quoted list, i.e. C<('item0', 'item1', ..., 'itemN')>.
+If the value is an array reference, the elements are interpreted as import directives. These must (for now) be simple strings, not object/references etc. These are written out as a single quoted list, i.e. C<('item0', 'item1', ..., 'itemN')>.
 
 =head3 HASH REFERENCE
 
-If the value is a hash reference. This may contain the keys C<version> and C<import> which behave just like the two previous calling types (taking a scalar and an array reference repectively). In fact this calling style is used internally by the L</"SIMPLE SCALAR"> and L</"ARRAY REFERENCE"> types anyway. 
+If the value is a hash reference, the mechanism is the most flexible. This may contain the keys C<version> and C<import> which behave just like the two previous calling types (taking a scalar and an array reference repectively). In fact this calling style is used internally by the L</"SIMPLE SCALAR"> and L</"ARRAY REFERENCE"> types anyway. 
 
 Further it also can take the key C<check_installed> with a true value. When this is done the module will only be written to a C<use> statement if L<Module::CoreList> or C<ExtUtils::Install> can find them. This prevents the embarrassing C<not found in @INC> errors when the module isn't installed; of course this means that it will not be loaded at all, so only use this functionality when it is deserved. To check if the module was loaded, C<Module::UseFrom> adds the key C<found_version> which contains the imformation that the aforementioned modules obtained in checking for the module. If the module isn't loaded then C<found_module> will be zero. N.B. if you intend to inspect your variable after wards you might need to declare it before the C<BEGIN> block.
 
