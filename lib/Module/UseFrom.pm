@@ -265,7 +265,7 @@ Finally, if a C<version> and C<check_installed> are both specified and the modul
  use Module::UseFrom;
  our %var;
  BEGIN {
-   our %var = (
+   %var = (
      'Carp' => {
        check_installed => 1,
        version => 0.01,
