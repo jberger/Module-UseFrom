@@ -95,22 +95,21 @@ sub gen_replacement {
     foreach my $module (keys %modules) {
       my $reftype = ref $modules{$module};
 
-      my $statement;
+      my @args = ($module);
       if ($reftype eq 'HASH') {
-        $statement = gen_use_statement($module, $modules{$module});
+        push @args, $modules{$module};
       } elsif ($reftype eq 'ARRAY') {
-        $statement = gen_use_statement(
-          $module,
-          { 'import' => $modules{$module} }
-        );
+        push @args, { 'import' => $modules{$module} };
       } else {
-        $statement = gen_use_statement(
-          $module,
-          { 'version' => $modules{$module} }
-        );
+        push @args, { 'version' => $modules{$module} };
       }
 
+      my ($statement, $found_version) = gen_use_statement(@args);
       push @statements, $statement if $statement;
+
+      if ($found_version) {
+        ${$varname}{'found_version'} = $found_version;
+      }
     }
 
     $new_statement .= join('; ', @statements);
@@ -137,8 +136,6 @@ sub gen_use_statement {
 
     return '' unless $found_version;
 
-    
-
     if ($req_version) {
       my $rv = version->parse($req_version);
       my $fv = version->parse($found_version);
@@ -158,7 +155,7 @@ sub gen_use_statement {
     $return .= q/ ('/ . join( q/', '/, @{ $opts->{'import'} } ) . q/')/;
   }
 
-  if (wantarray) {
+  if (wantarray and $found_version) {
     return ($return, $found_version);
   } else { 
     return $return;
