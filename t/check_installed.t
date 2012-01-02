@@ -5,10 +5,12 @@ use Test::More;
 
 use ExtUtils::Installed;
 
-use Module::UseFrom {check_installed => 1};
+use Module::UseFrom;
 
 my %non_core;
 BEGIN {
+  $Module::UseFrom::check_installed = 1;
+
   warn "Net::FTP already loaded\n" if defined $INC{'Net/FTP.pm'};
   our @var = qw'Net::FTP Something::That::Isnt::Installed';
 

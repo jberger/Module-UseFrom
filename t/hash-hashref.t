@@ -4,9 +4,12 @@ use warnings;
 use Test::More;
 
 my $verbose;
-use Module::UseFrom {verbose => \$verbose};
+
+use Module::UseFrom;
 
 BEGIN {
+  $Module::UseFrom::verbose = \$verbose;
+
   our %modules = (
     'Net::FTP' => { 
       check_installed => 1,
