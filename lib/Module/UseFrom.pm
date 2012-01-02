@@ -236,7 +236,7 @@ If you need to import or specify a version, just do it as you would have if this
 
 Rather than making repeated calls to C<use_from> (which is fine), a shortcut is to pass an array which contains multiple module names. These will be translated to muliple C<use> directives. The last one will not be terminated, so conceivably this mechanism can be used to pass additional arguments to the last module in the array. Rather than do this though, check out the more useful L</HASH> type of calling when doing this. 
 
- use Module::UseFrom
+ use Module::UseFrom;
  BEGIN {
    our @var = qw'Scalar::Util List::Util';
  }
@@ -258,20 +258,23 @@ If the value is an array reference, which is interpreted as import directives. T
 
 If the value is a hash reference. This may contain the keys C<version> and C<import> which behave just like the two previous calling types (taking a scalar and an array reference repectively). In fact this calling style is used internally by the L</"SIMPLE SCALAR"> and L</"ARRAY REFERENCE"> types anyway. 
 
-Further it also can take the key C<check_installed> with a true value. When this is done the module will only be written to a C<use> statement if L<Module::CoreList> or C<ExtUtils::Install> can find them. This prevents the embarrassing C<not found in @INC> errors when the module isn't installed; of course this means that it will not be loaded at all, so only use this functionality when it is deserved. To check if the module was loaded, C<Module::UseFrom> adds the key <found_version> which contains the imformation that the aforementioned modules obtained in checking for the module. If the module isn't loaded then C<found_module> will be zero.
+Further it also can take the key C<check_installed> with a true value. When this is done the module will only be written to a C<use> statement if L<Module::CoreList> or C<ExtUtils::Install> can find them. This prevents the embarrassing C<not found in @INC> errors when the module isn't installed; of course this means that it will not be loaded at all, so only use this functionality when it is deserved. To check if the module was loaded, C<Module::UseFrom> adds the key <found_version> which contains the imformation that the aforementioned modules obtained in checking for the module. If the module isn't loaded then C<found_module> will be zero. N.B. if you intend to inspect your variable after wards you might need to declare it before the C<BEGIN> block.
 
 Finally, if a C<version> and C<check_installed> are both specified and the module is installed but of insufficient version, the C<use> directive will not be writte, just as in the C<check_installed> scenario.
 
- use Module::UseFrom
+ use Module::UseFrom;
+ our %var;
  BEGIN {
    our %var = (
      'Carp' => {
+       check_installed => 1,
        version => 0.01,
        'import' => [ qw/carp croak/ ]
      },
    );
  }
  use_from %var; # use Carp 0.01 ('carp', 'croak');
+ print $var{Carp}{found_version}; # prints version of Carp found by Module::CoreList
 
 =head1 OPTIONS
 
