@@ -11,9 +11,19 @@ use version 0.77;
 use Devel::Declare ();
 
 my $inst = ExtUtils::Installed->new();
-
 our $verbose = 0;
 our $check_installed = 0;
+
+sub _my_warn {
+  my $string = shift;
+  if ($verbose) {
+    if (ref $verbose) {
+      $$verbose .= $string;
+    } else {
+      warn $string;
+    }
+  }
+}
 
 sub import {
   my $class = shift;
@@ -36,14 +46,7 @@ sub import {
 sub rewrite_use_from {
   my $linestr = Devel::Declare::get_linestr;
 
-  if ($verbose) {
-    my $string = "Got: $linestr";
-    if (ref $verbose) {
-      $$verbose .= $string;
-    } else {
-      warn $string;
-    }
-  }
+  _my_warn "Got: $linestr";
 
   my $caller = Devel::Declare::get_curstash_name;
 
@@ -53,14 +56,7 @@ sub rewrite_use_from {
     gen_replacement($caller, $sigil, $var);
   /e;
   
-  if ($verbose) {
-    my $string = "Rewritten: $linestr";
-    if (ref $verbose) {
-      $$verbose .= $string;
-    } else {
-      warn $string;
-    }
-  }
+  _my_warn "Rewritten: $linestr";
 
   Devel::Declare::set_linestr($linestr);
 }
@@ -131,9 +127,9 @@ sub gen_use_statement {
   my $check = $check_installed || $opts->{check_installed};
   my $req_version = $opts->{version} || 0;
 
-  my $return;
+  my $found_version;
   if ($check) {
-    my $found_version = 
+    $found_version = 
       eval { $inst->version($module) } ||
       exists $Module::CoreList::version{$]}{$module} 
         ? ( $Module::CoreList::version{$]}{$module} || 'no version') 
@@ -141,18 +137,18 @@ sub gen_use_statement {
 
     return '' unless $found_version;
 
+    
+
     if ($req_version) {
       my $rv = version->parse($req_version);
       my $fv = version->parse($found_version);
 
       return '' unless ($fv >= $rv);
     }
-    
-    $return = "use $module";
 
-  } else {
-    $return = "use $module";
   }
+
+  my $return = "use $module";
 
   if ($req_version) {
     $return .= " $req_version";
@@ -162,7 +158,11 @@ sub gen_use_statement {
     $return .= q/ ('/ . join( q/', '/, @{ $opts->{'import'} } ) . q/')/;
   }
 
-  return $return;
+  if (wantarray) {
+    return ($return, $found_version);
+  } else { 
+    return $return;
+  }
 }
 
 1;
@@ -183,6 +183,8 @@ Module::UseFrom - Safe compile-time module loading from a variable
  use_from $var; # use Scalar::Util;
 
 =head1 DESCRIPTION
+
+Many people have written about Perl's problem of loading a module from a string. This module attempts to solve that problem in a safe and useful manner. Using the magic of L<Devel::Declare>, the contents of a variable are translated into a bareword C<use> statement. Since it leans on this, the safest of the loading mechanisms, it should be every bit as safe.
 
 =head1 SOURCE REPOSITORY
 

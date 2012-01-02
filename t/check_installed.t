@@ -16,6 +16,8 @@ BEGIN {
   my @installed = $inst->modules();
 
   foreach my $module (@installed) {
+    next if $module =~ /Acme/;
+
     my $filename = $module;
     $filename =~ s'::'/'g;
     $filename .= '.pm';
@@ -34,7 +36,7 @@ ok( defined $INC{'Net/FTP.pm'}, "Loads Net::FTP from array" );
 
 SKIP: {
   skip "No non-core module installed but not loaded", 1 unless $non_core{module};
-  ok( defined $INC{$non_core{filename}}, "Loads non_core module ($non_core{module})" );
+  ok( defined $INC{$non_core{filename}}, "Loads non-core module ($non_core{module})" );
 }
 
 done_testing;
