@@ -11,8 +11,9 @@ use version 0.77;
 use Devel::Declare ();
 
 my $inst = ExtUtils::Installed->new();
-my $verbose = 0;
-my $check_installed = 0;
+
+our $verbose = 0;
+our $check_installed = 0;
 
 sub import {
   my $class = shift;
@@ -165,4 +166,37 @@ sub gen_use_statement {
 }
 
 1;
+
+__END__
+__POD__
+
+=head1 NAME
+
+Module::UseFrom - Safe compile-time module loading from a variable
+
+=head1 SYNOPSIS
+
+ use Module::UseFrom
+ BEGIN {
+   our $var = 'Scalar' . '::' . 'Util';
+ }
+ use_from $var; # use Scalar::Util;
+
+=head1 DESCRIPTION
+
+=head1 SOURCE REPOSITORY
+
+L<http://github.com/jberger/Module-UseFrom>
+
+=head1 AUTHOR
+
+Joel Berger, E<lt>joel.a.berger@gmail.comE<gt>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2012 by Joel Berger
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
 
