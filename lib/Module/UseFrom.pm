@@ -107,7 +107,7 @@ sub gen_replacement {
       push @statements, $statement if $statement;
 
       if (defined $found_version) {
-        ${$varname}{'found_version'} = $found_version;
+        ${$varname}{$module}{'found_version'} = $found_version;
       }
     }
 
@@ -208,7 +208,7 @@ The C<use_from> injects a C<use> statement taking the place of the original call
 
 =back
 
-=head1 CALLING VARIABLE
+=head1 THE VARIABLE
 
 Since L<Devel::Declare> and C<use> both do their work at compile-time, your variable must be populated by then. C<BEGIN> blocks allow you to do this. C<Module::UseFrom> examines the given variable's contents, therefore the variable must be accessible from outside the package, this usually will mean using an C<our> variable. See the L</SYNOPSIS> to see an example.
 
@@ -283,7 +283,7 @@ When set to a true value, some additional information is printed to C<STDERR> (v
 
 =head2 C<$Module::UseFrom::check_installed>
 
-When set to a true value, all modules inspected by C<use_from> are treated as though the <check_installed> option from L</"HASH REFERENCE"> is true, even if using the L</SCALAR> and L</ARRAY> forms.
+When set to a true value, all modules inspected by C<use_from> are treated as though the C<check_installed> option from L</"HASH REFERENCE"> was enabled, even if using the L</SCALAR> and L</ARRAY> forms.
 
 =head1 SOURCE REPOSITORY
 
