@@ -12,9 +12,14 @@ use Devel::Declare ();
 
 my $inst = ExtUtils::Installed->new();
 
-## Options Variables ##
 our $verbose;
-our $check_installed;
+my %export_ok = (
+  'use_from' => { const => \&rewrite_use_from },
+  'use_if_installed' => { const => \&rewrite_use_from },
+);
+
+######################
+## utility functions
 
 sub _my_warn {
   my $string = shift;
@@ -27,138 +32,83 @@ sub _my_warn {
   }
 }
 
+sub find_module_version {
+  my $module = shift;
+
+  my $version = 
+    eval { $inst->version($module) } ||
+    exists $Module::CoreList::version{$]}{$module} 
+      ? ( $Module::CoreList::version{$]}{$module} || 1e-7 ) 
+      : 0;
+
+  return $version;
+}
+
+###########
+## import
+
 sub import {
   my $class = shift;
-  my $opts = shift;
+
+  # setup from explicit imports
+  my $export = {};
+  foreach my $keyword (@_) {
+
+    # :all tag
+    if ($keyword eq ':all') {
+      $export = \%export_ok;
+      last;
+    }
+
+    # check import is available
+    unless ( exists $export_ok{$keyword} ) {
+      carp "Keyword $keyword is not exported by Module::UseFrom";
+      next;
+    }
+
+    # setup specific keyword
+    $export->{$keyword} = $export_ok{$keyword};
+  }
+
+  # if called without explicit imports
+  unless (keys $export) {
+    $export->{'use_from'} = $export_ok{'use_from'};
+  }
 
   my $caller = caller;
 
-  Devel::Declare->setup_for(
-      $caller,
-      { 'use_from' => { const => \&rewrite_use_from } }
-  );
-  no strict 'refs';
-  *{$caller.'::use_from'} = sub {};
+  Devel::Declare->setup_for( $caller, $export );
+
+  foreach my $keyword (keys %$export) {
+    no strict 'refs';
+    *{$caller.'::'.$keyword} = sub {};
+  }
 
 }
+
+##################
+## rewrite rules
 
 sub rewrite_use_from {
   my $linestr = Devel::Declare::get_linestr;
 
-  _my_warn "Got: $linestr";
+  _my_warn "use_from got: $linestr";
 
   my $caller = Devel::Declare::get_curstash_name;
 
-  $linestr =~ s/use_from\s+([\$\@\%]{1})(\w+)/
-    my $sigil = $1;
-    my $var = $2;
-    gen_replacement($caller, $sigil, $var);
-  /e;
-  
-  _my_warn "Rewritten: $linestr";
-
-  Devel::Declare::set_linestr($linestr);
-}
-
-sub gen_replacement {
-  my ($caller, $sigil, $var) = @_;
-
-  my $varname = $caller . '::' . $var;
-
-  my $new_statement = 'use_from; ';
-
-  no strict 'refs';
-  if ($sigil eq '$') {
+  $linestr =~ s/use_from\s+\$(\w+)/
+    no strict 'refs';
+    my $varname = $caller . '::' . $1;
     my $module = 
       (defined ${$varname}) 
       ? ${$varname}
       : croak "Cannot access variable \$$varname";
-    $new_statement .= gen_use_statement($module);
-  } elsif ($sigil eq '@') {
-    my @modules = 
-      (scalar @{$varname}) 
-      ? @{$varname}
-      : croak "Cannot access variable \@$varname";
+    "use_from; use $module";
+  /e;
   
-    my @statements = map { gen_use_statement($_) || () } @modules;
+  _my_warn "use_from returned: $linestr";
 
-    $new_statement .= join('; ', @statements);
-  } elsif ($sigil eq '%') {
-    my %modules = 
-      (scalar keys %{$varname}) 
-      ? %{$varname}
-      : croak "Cannot access variable \%$varname";
-
-    my @statements;
-
-    foreach my $module (keys %modules) {
-      my $reftype = ref $modules{$module};
-
-      my @args = ($module);
-      if ($reftype eq 'HASH') {
-        push @args, $modules{$module};
-      } elsif ($reftype eq 'ARRAY') {
-        push @args, { 'import' => $modules{$module} };
-      } else {
-        push @args, { 'version' => $modules{$module} };
-      }
-
-      my ($statement, $found_version) = gen_use_statement(@args);
-      push @statements, $statement if $statement;
-
-      if (defined $found_version) {
-        ${$varname}{$module}{'found_version'} = $found_version;
-      }
-    }
-
-    $new_statement .= join('; ', @statements);
-  }
-
-  return $new_statement;
-}
-
-sub gen_use_statement {
-  my ($module, $opts) = @_;
-
-  $opts ||= {};
-
-  my $check = $check_installed || $opts->{check_installed};
-  my $req_version = $opts->{version} || 0;
-
-  my $found_version;
-  if ($check) {
-    $found_version = 
-      eval { $inst->version($module) } ||
-      exists $Module::CoreList::version{$]}{$module} 
-        ? ( $Module::CoreList::version{$]}{$module} || 'no version') 
-        : 0;
-
-    return '' unless $found_version;
-
-    if ($req_version) {
-      my $rv = version->parse($req_version);
-      my $fv = version->parse($found_version);
-
-      return '' unless ($fv >= $rv);
-    }
-
-  }
-
-  my $return = "use $module";
-
-  if ($req_version) {
-    $return .= " $req_version";
-  }
-
-  if (ref $opts->{'import'} and @{ $opts->{'import'} }) {
-    $return .= q/ ('/ . join( q/', '/, @{ $opts->{'import'} } ) . q/')/;
-  }
-
-  if (wantarray and defined $found_version) {
-    return ($return, $found_version);
-  } else { 
-    return $return;
-  }
+  Devel::Declare::set_linestr($linestr);
 }
 
 1;
