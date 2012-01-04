@@ -209,29 +209,9 @@ C<Module::UseFrom> exports C<use_from> by default. Either C<use_from> or C<use_i
 
 =head2 C<use_from>
 
-The function C<use_from> is the basic interface provided by C<Module::UseFrom>. It takes one argument, a variable, called WITHOUT round braces (see L</SYNOPSIS>). The variable can be a scalar, array, or hash (not a list), the usage for each of these forms will be discussed later.
+The function C<use_from> is the basic interface provided by C<Module::UseFrom>. It takes one scalar variable, called WITHOUT round braces (see L</SYNOPSIS>). C<Module::UseFrom> will inspect the variable for information. This variable must be a simple Scalar.
 
-Some things to keep in mind:
-
-=over
-
-=item *
-
-The variable must come after C<use_from> on the same line. This is a limitation stemming from L<Devel::Declare>.
-
-=item *
-
-The C<use_from> injects a C<use> statement taking the place of the original call and variable. This means if anything exists on the same line, it is left intact (even the ending semicolon is not affected). This behavior is by design, allowing the user to pass version or import directives as if C<use_from $var> was simply a regular C<use Bareword::Module> statement.
-
-=back
-
-=head1 THE VARIABLE
-
-Since L<Devel::Declare> and C<use> both do their work at compile-time, your variable must be populated by then. C<BEGIN> blocks allow you to do this. C<Module::UseFrom> examines the given variable's contents, therefore the variable must be accessible from outside the package, this usually will mean using an C<our> variable. See the L</SYNOPSIS> to see an example.
-
-C<Module::UseFrom> will inspect the variable for information. This variable must be a simple Scalar.
-
-=head2 SCALAR
+=head3 Examples
 
 The most basic usage is as follows
 
@@ -248,6 +228,26 @@ If you need to import or specify a version, just do it as you would have if this
    our $var = 'Scalar::Util';
  }
  use_from $var qw/dualvar/; # use Scalar::Util qw/dualvar/;
+
+=head3 Considerations
+
+Some things to keep in mind:
+
+=over
+
+=item *
+
+The variable must come after C<use_from> on the same line. This is a limitation stemming from L<Devel::Declare>.
+
+=item *
+
+The C<use_from> injects a C<use> statement taking the place of the original call and variable. This means if anything exists on the same line, it is left intact (even the ending semicolon is not affected). This behavior is by design, allowing the user to pass version or import directives as if C<use_from $var> was simply a regular C<use Bareword::Module> statement.
+
+=item *
+
+Since L<Devel::Declare> and C<use> both do their work at compile-time, your variable must be populated by then. C<BEGIN> blocks allow you to do this. C<Module::UseFrom> examines the given variable's contents, therefore the variable must be accessible from outside the package, this usually will mean using an C<our> variable. See the L</SYNOPSIS> to see an example.
+
+=back
 
 =head1 VERBOSE OUTPUT
 
