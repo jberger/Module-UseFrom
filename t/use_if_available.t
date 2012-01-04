@@ -5,7 +5,7 @@ use Test::More;
 
 use ExtUtils::Installed;
 
-use Module::UseFrom 'use_if_installed';
+use Module::UseFrom 'use_if_available';
 
 my %non_core;
 my $rewritten;
@@ -42,15 +42,15 @@ BEGIN {
   }
 }
 
-use_if_installed $core;
-use_if_installed $bad;
-use_if_installed $non_core;
+use_if_available $core;
+use_if_available $bad;
+use_if_available $non_core;
 
-use_if_installed $version_ok 0.01;
-use_if_installed $version_bad 999;
+use_if_available $version_ok 0.01;
+use_if_available $version_bad 999;
 
-use_if_installed $version_ok_import 0.01 qw/croak/;
-use_if_installed $version_bad_import 999 qw/dualvar/;
+use_if_available $version_ok_import 0.01 qw/croak/;
+use_if_available $version_bad_import 999 qw/dualvar/;
 
 ok( 1, q/Doesn't die on bad modules/ );
 unlike( $rewritten, qr/Something::That::Isnt::Installed/, "no use statement of not-installed module" );
@@ -67,6 +67,8 @@ ok( __PACKAGE__->can('croak'), "Imports croak (with version)" );
 ok( ! __PACKAGE__->can('dualvar'), "Does not import dualvar (bad version)" );
 
 ok( $core > 0, "loaded core module returns numerical value" );
+is( $core, 'Net::FTP', "dualvar does not wreck string value" );
+
 ok( $bad == 0, "non-loaded not-installed module is numerically zero" );
 ok( $version_bad == 0, "non-loaded bad-version module is numerically zero" );
 
