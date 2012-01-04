@@ -205,7 +205,7 @@ Further, C<Module::UseFrom> can do some rudimentary checking before writing the 
 
 =head1 FUNCTIONS 
 
-C<Module::UseFrom> exports C<use_from> by default. Either C<use_from> or C<use_if_available> may be requested in the usual manner. The tag C<:all> will request both.
+C<Module::UseFrom> exports C<use_from> by default. Any of the following functions may be requested in the usual manner. The tag C<:all> will request them all.
 
 =head2 use_from
 
@@ -264,7 +264,7 @@ To check if the module was C<use>ed, you may examine your original value in nume
 
  die "I guess I really wanted $var" unless $var > 0;
 
-Unlike C<use_from>, which naively injects the proper C<use> statement in-place, C<use_if_available> is smarter, and will inject a list-prototyped no-op call in front of any import list should the module not be available or not of the proper version. If you don't know what this means, don't fret, just know that C<use_if_available> behaves as you think it should.
+Unlike C<use_from>, which naively injects the proper C<use> statement in-place, C<use_if_available> is smarter and will inject a list-prototyped no-op call in front of any import list should the module not be available or not of the proper version. If you don't know what this means, don't fret, just know that C<use_if_available> behaves as you think it should.
 
 =head1 VERBOSE OUTPUT
 
