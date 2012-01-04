@@ -44,6 +44,19 @@ sub find_module_version {
   return $version;
 }
 
+sub get_varref_by_name {
+  my ($caller, $var) = @_;
+  my $varname = $caller . '::' . $var;
+
+  no strict 'refs';
+  my $varref = 
+    (defined ${$varname}) 
+    ? \${$varname}
+    : croak "Cannot access variable \$$varname";
+
+  return $varref;
+}
+
 ###########
 ## import
 
@@ -97,12 +110,8 @@ sub rewrite_use_from {
   my $caller = Devel::Declare::get_curstash_name;
 
   $linestr =~ s/use_from\s+\$(\w+)/
-    no strict 'refs';
-    my $varname = $caller . '::' . $1;
-    my $module = 
-      (defined ${$varname}) 
-      ? ${$varname}
-      : croak "Cannot access variable \$$varname";
+    my $varref = get_varref_by_name($caller, $1);
+    my $module = $$varref;
     "use_from; use $module";
   /e;
   
@@ -119,12 +128,8 @@ sub rewrite_use_if_installed {
   my $caller = Devel::Declare::get_curstash_name;
 
   $linestr =~ s/use_if_installed\s+\$(\w+)/
-    no strict 'refs';
-    my $varname = $caller . '::' . $1;
-    my $module = 
-      (defined ${$varname}) 
-      ? ${$varname}
-      : croak "Cannot access variable \$$varname";
+    my $varref = get_varref_by_name($caller, $1);
+    my $module = $$varref;
     "use_if_installed; use $module";
   /e;
   
