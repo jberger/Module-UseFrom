@@ -3,8 +3,11 @@ package Module::UseFrom;
 use strict;
 use warnings;
 
+use v5.8.1;
+
 use Carp;
 use Module::CoreList;
+use Scalar::Util qw/dualvar/;
 use ExtUtils::Installed;
 use version 0.77;
 
@@ -94,7 +97,7 @@ sub import {
 
   foreach my $keyword (keys %$export) {
     no strict 'refs';
-    *{$caller.'::'.$keyword} = sub {};
+    *{$caller.'::'.$keyword} = sub (@) {};
   }
 
 }
@@ -127,26 +130,48 @@ sub rewrite_use_if_installed {
 
   my $caller = Devel::Declare::get_curstash_name;
 
-  $linestr =~ s/use_if_installed\s+\$(\w+)(?:\s+([^\s;]+))?/
+  $linestr =~ s/use_if_installed\s+\$(\w+)(\s+[^\s;]+)?/
     my $name = $1;
-    my $version = $2 || '';
-
-    my $varref = get_varref_by_name($caller, $name);
-    my $module = $$varref;
-
-    my $return = 'use_if_installed;';
-
-    if (1) { # to be replaced with test for available
-      $return .= " use $module";
-      $return .= " $version" if $version;
-    }
-
-    $return;
+    my $version = $2;
+    do_use_if_installed($caller, $name, $version);
   /e;
   
   _my_warn "use_if_installed returned: $linestr";
 
   Devel::Declare::set_linestr($linestr);
+}
+
+sub do_use_if_installed {
+  my ($caller, $name, $version) = @_;
+  my $return = 'use_if_installed ';
+
+  my $varref = get_varref_by_name($caller, $name);
+  my $module = $$varref;
+
+  my $found_version = find_module_version($module);
+
+  unless ($found_version) {
+    return $return;
+  }
+
+  my $requested_version;
+  if ($version) {
+    $requested_version = eval { version->parse($version) };
+  }
+
+  if (defined $requested_version and $requested_version > $found_version) {
+    my $dualvar = dualvar 0, $module;
+    $varref = \$dualvar;
+    return $return;
+  }
+
+  my $dualvar = dualvar $found_version, $module;
+  $varref = \$dualvar;
+
+  $return .= "; use $module";
+  $return .= $version if $version;
+
+  return $return;
 }
 
 1;
