@@ -15,7 +15,7 @@ my $inst = ExtUtils::Installed->new();
 our $verbose;
 my %export_ok = (
   'use_from' => { const => \&rewrite_use_from },
-  'use_if_installed' => { const => \&rewrite_use_from },
+  'use_if_installed' => { const => \&rewrite_use_if_installed },
 );
 
 ######################
@@ -107,6 +107,28 @@ sub rewrite_use_from {
   /e;
   
   _my_warn "use_from returned: $linestr";
+
+  Devel::Declare::set_linestr($linestr);
+}
+
+sub rewrite_use_if_installed {
+  my $linestr = Devel::Declare::get_linestr;
+
+  _my_warn "use_if_installed got: $linestr";
+
+  my $caller = Devel::Declare::get_curstash_name;
+
+  $linestr =~ s/use_if_installed\s+\$(\w+)/
+    no strict 'refs';
+    my $varname = $caller . '::' . $1;
+    my $module = 
+      (defined ${$varname}) 
+      ? ${$varname}
+      : croak "Cannot access variable \$$varname";
+    "use_if_installed; use $module";
+  /e;
+  
+  _my_warn "use_if_installed returned: $linestr";
 
   Devel::Declare::set_linestr($linestr);
 }
