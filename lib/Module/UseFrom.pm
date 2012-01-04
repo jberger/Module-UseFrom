@@ -44,6 +44,8 @@ sub find_module_version {
       ? ( $Module::CoreList::version{$]}{$module} || 1e-7 ) 
       : 0;
 
+  $version = version->parse($version);
+
   return $version;
 }
 
@@ -167,7 +169,7 @@ sub do_use_if_installed {
     return $return;
   }
 
-  my $dualvar = dualvar $found_version, $module;
+  my $dualvar = dualvar $found_version->numify, $module;
   $$varref = $dualvar;
 
   $return .= "; use $module";
