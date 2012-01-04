@@ -66,9 +66,9 @@ unlike( $rewritten, qr/Net::POP3/, "Net::POP3 not in statement with version 999"
 ok( __PACKAGE__->can('croak'), "Imports croak (with version)" );
 ok( ! __PACKAGE__->can('dualvar'), "Does not import dualvar (bad version)" );
 
-ok( $core >= 0, "loaded core module returns numerical value" );
+ok( $core > 0, "loaded core module returns numerical value" );
 ok( $bad == 0, "non-loaded not-installed module is numerically zero" );
-ok( $version_bad, "non-loaded bad-version module is numerically zero" );
+ok( $version_bad == 0, "non-loaded bad-version module is numerically zero" );
 
 SKIP: {
   skip "No non-core module installed but not loaded", 1 unless $non_core{module};

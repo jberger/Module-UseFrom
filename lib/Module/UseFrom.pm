@@ -151,6 +151,8 @@ sub do_use_if_installed {
   my $found_version = find_module_version($module);
 
   unless ($found_version) {
+    my $dualvar = dualvar 0, $module;
+    $$varref = $dualvar;
     return $return;
   }
 
@@ -161,12 +163,12 @@ sub do_use_if_installed {
 
   if (defined $requested_version and $requested_version > $found_version) {
     my $dualvar = dualvar 0, $module;
-    $varref = \$dualvar;
+    $$varref = $dualvar;
     return $return;
   }
 
   my $dualvar = dualvar $found_version, $module;
-  $varref = \$dualvar;
+  $$varref = $dualvar;
 
   $return .= "; use $module";
   $return .= $version if $version;
