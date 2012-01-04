@@ -205,13 +205,13 @@ Further, C<Module::UseFrom> can do some rudimentary checking before writing the 
 
 =head1 FUNCTIONS 
 
-C<Module::UseFrom> exports C<use_from> by default. Either C<use_from> or C<use_if_available> may be requested in the usual manner. The that C<:all> will import both.
+C<Module::UseFrom> exports C<use_from> by default. Either C<use_from> or C<use_if_available> may be requested in the usual manner. The tag C<:all> will request both.
 
 =head2 use_from
 
-The function C<use_from> is the basic interface provided by C<Module::UseFrom>. It takes one scalar variable, called WITHOUT round braces (see L</SYNOPSIS>). C<Module::UseFrom> will inspect the variable for information. This variable must be a simple Scalar.
+The function C<use_from> is the basic interface provided by C<Module::UseFrom>. It takes one scalar variable, called WITHOUT round braces. C<Module::UseFrom> will inspect the variable for information. This variable must be a simple scalar (i.e. not a reference).
 
-The most basic usage is as follows
+The most basic usage is as follows:
 
  use Module::UseFrom;
  BEGIN {
@@ -219,7 +219,7 @@ The most basic usage is as follows
  }
  use_from $var; # use Scalar::Util;
 
-If you need to import or specify a version, just do it as you would have if this was a simple C<use> call where your variable replaces the module.
+If you need to import or specify a version, just do it as you would have if this was a simple C<use> call where your variable replaces the module:
 
  use Module::UseFrom;
  BEGIN {
@@ -233,11 +233,11 @@ Some things to keep in mind:
 
 =item *
 
-The variable must come after C<use_from> on the same line. This is a limitation stemming from L<Devel::Declare>.
+The variable must follow C<use_from> on the same line. This is a limitation stemming from L<Devel::Declare>.
 
 =item *
 
-The C<use_from> injects a C<use> statement taking the place of the original call and variable. This means if anything exists on the same line, it is left intact (even the ending semicolon is not affected). This behavior is by design, allowing the user to pass version or import directives as if C<use_from $var> was simply a regular C<use Bareword::Module> statement.
+The C<use_from> injects a C<use> statement taking the place of the original call and variable. This means if anything else exists on the same line or if the statement continues to further lines, it is left intact (even the ending semicolon is not affected). This behavior is by design, allowing the user to pass version or import directives as if C<use_from $var> was simply a regular C<use Bareword::Module> statement.
 
 =item *
 
@@ -245,7 +245,7 @@ Since L<Devel::Declare> and C<use> both do their work at compile-time, your vari
 
 =item *
 
-C<Module::UseFrom> examines the given variable's contents, therefore the variable must be accessible from outside the package, this usually will mean using an C<our> variable. See the L</SYNOPSIS> to see an example.
+C<Module::UseFrom> examines the given variable's contents, therefore the variable must be accessible from outside the package, this usually will mean using an C<our> variable.
 
 =back
 
@@ -260,7 +260,7 @@ To check if the module was C<use>ed, you may examine your original value in nume
  BEGIN {
    $var = 'Scalar::Util';
  }
- use_if_available $var 999 qw/looks_like_number/; # Scalar::Util is not loaded
+ use_if_available $var 999 qw/reftype/; # Scalar::Util is not loaded
 
  die "I guess I really wanted $var" unless $var > 0;
 
@@ -270,11 +270,11 @@ Unlike C<use_from>, which naively injects the proper C<use> statement in-place, 
 
 Verbose output is controlled by the package variable C<$Module::UseFrom::verbose>.
 
-When set to a true value, some additional information is printed to C<STDERR> (via C<warn>). In the special case that it is set to a reference to a scalar, the information is kept in that scalar rather than printing. Presumably these actions must be performed inside a C<BEGIN> block, so that it is set in time to be useful.
+When set to a true value, some additional information is printed to C<STDERR> (via C<warn>). In the special case that it is set to a reference to a scalar, the information is kept in that scalar rather than printing. Activating this feature will most likely need to be performed inside a C<BEGIN> block, so that it is set in time to be useful.
 
 =head1 INSTALLATION ISSUES
 
-During installation, one may see warnings like C<Name "ExtUtils::Packlist::FY1" used only once: possible typo at ...>. This seems to be related to L<ExtUtils::Installed> bug L<50315|https://rt.cpan.org/Public/Bug/Display.html?id=50315>. A patch has been accepted which should fix it. It is not a concern and does not affect any functionality whatsoever, just ignore it.
+During installation, one may see warnings like C<Name "ExtUtils::Packlist::FY1" used only once: possible typo at ...>. This seems to be related to L<ExtUtils::Installed> bug L<50315|https://rt.cpan.org/Public/Bug/Display.html?id=50315>. A L<patch|https://rt.perl.org/rt3//Public/Bug/Display.html?id=107410> has been accepted which should fix it. It is not a concern and does not affect any functionality whatsoever, just ignore it.
 
 =head1 SOURCE REPOSITORY
 
