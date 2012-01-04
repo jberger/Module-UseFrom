@@ -127,10 +127,21 @@ sub rewrite_use_if_installed {
 
   my $caller = Devel::Declare::get_curstash_name;
 
-  $linestr =~ s/use_if_installed\s+\$(\w+)/
-    my $varref = get_varref_by_name($caller, $1);
+  $linestr =~ s/use_if_installed\s+\$(\w+)(?:\s+([^\s;]+))?/
+    my $name = $1;
+    my $version = $2 || '';
+
+    my $varref = get_varref_by_name($caller, $name);
     my $module = $$varref;
-    "use_if_installed; use $module";
+
+    my $return = 'use_if_installed;';
+
+    if (1) { # to be replaced with test for available
+      $return .= " use $module";
+      $return .= " $version" if $version;
+    }
+
+    $return;
   /e;
   
   _my_warn "use_if_installed returned: $linestr";
