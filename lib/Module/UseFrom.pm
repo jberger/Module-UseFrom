@@ -28,7 +28,7 @@ sub _my_warn {
   my $string = shift;
   if ($verbose) {
     if ((ref $verbose || '') eq 'SCALAR') {
-      $$verbose .= $string;
+      $$verbose .= "$string\n";
     } else {
       warn $string;
     }
@@ -48,12 +48,16 @@ sub find_module_version {
 
   $version = version->parse($version);
 
+  _my_warn $version ? "\tFound version $version" : "\tCouldn't find version info for $module!";
+
   return $version;
 }
 
 sub get_varref_by_name {
   my ($caller, $var) = @_;
   my $varname = $caller . '::' . $var;
+
+  _my_warn "\tInvestigating package $caller for variable $caller, resolved as $varname";
 
   no strict 'refs';
   my $varref = 
@@ -152,6 +156,8 @@ sub do_use_if_available {
   my $varref = get_varref_by_name($caller, $name);
   my $module = $$varref;
 
+  _my_warn "\tFound request for module $module";
+
   my $found_version = find_module_version($module);
 
   unless ($found_version) {
@@ -163,9 +169,11 @@ sub do_use_if_available {
   my $requested_version;
   if ($version) {
     $requested_version = eval { version->parse($version) };
+    _my_warn "\tRequested version $requested_version";
   }
 
   if (defined $requested_version and $requested_version > $found_version) {
+    _my_warn "\tInsufficient version found, skipping import!";
     my $dualvar = dualvar 0, $module;
     $$varref = $dualvar;
     return $return;

@@ -53,7 +53,7 @@ use_if_available $version_ok_import 0.01 qw/croak/;
 use_if_available $version_bad_import 999 qw/dualvar/;
 
 ok( 1, q/Doesn't die on bad modules/ );
-unlike( $rewritten, qr/Something::That::Isnt::Installed/, "no use statement of not-installed module" );
+unlike( $rewritten, qr/use\s+Something::That::Isnt::Installed/, "no use statement of not-installed module" );
 
 ok( defined $INC{'Net/FTP.pm'}, "Loads Net::FTP from scalar" );
 like( $rewritten, qr/Net::FTP/, "Net::FTP statement in variable" );
@@ -61,7 +61,7 @@ like( $rewritten, qr/Net::FTP/, "Net::FTP statement in variable" );
 ok( defined $INC{'Pod/Parser.pm'}, "Loads Pod::Parser with version" );
 like( $rewritten, qr/Pod::Parser/, "Pod::Parser (with version) statement in variable" );
 
-unlike( $rewritten, qr/Net::POP3/, "Net::POP3 not in statement with version 999" );
+unlike( $rewritten, qr/use\s+Net::POP3/, "Net::POP3 not in statement with version 999" );
 
 ok( __PACKAGE__->can('croak'), "Imports croak (with version)" );
 ok( ! __PACKAGE__->can('dualvar'), "Does not import dualvar (bad version)" );
