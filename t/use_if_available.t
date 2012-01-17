@@ -29,6 +29,8 @@ BEGIN {
   my $inst = ExtUtils::Installed->new();
   foreach my $module ($inst->modules()) {
     next if $module =~ /Acme/;
+    #A::C3 seems to kill this test, so skip it
+    next if $module eq 'Algorithm::C3';
     next if $module eq 'Perl';
 
     my $filename = $module;
