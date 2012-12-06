@@ -207,7 +207,7 @@ Module::UseFrom - Safe compile-time module loading from a variable
 
 =head1 DESCRIPTION
 
-Many people have written about Perl's problem of loading a module from a string. This module attempts to solve that problem in a safe and useful manner. Using the magic of L<Devel::Declare>, the contents of a variable are translated into a bareword C<use> statement. Since C<Module::UseFrom> leans on this, the safest of the loading mechanisms, it should be every bit as safe. Even if the translations/hueristics used internally should fail, the system is not exposed to the insecurities introduced when translating to C<require FILE> statments or wrapping in a string C<eval>. 
+Many people have written about Perl's problem of loading a module from a string. This module attempts to solve that problem in a safe and useful manner. Using the magic of L<Devel::Declare>, the contents of a variable are translated into a bareword C<use> statement. Since C<Module::UseFrom> leans on this, the safest of the loading mechanisms, it should be every bit as safe. Even if the translations/heuristics used internally should fail, the system is not exposed to the insecurities introduced when translating to C<require FILE> statments or wrapping in a string C<eval>. 
 
 Further, C<Module::UseFrom> can do some rudimentary checking before writing the C<use> statement. Most usefully, it can be told only to write the C<use> statement if the module is installed or even of a high enough version. 
 
